@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+Date			Author					Comments
+Dec 23, 2004	trout.r@comcast.net		Created.
+Dec 27, 2004	trout.r@comcast.net		Added glider disconnect
+										transitions ("... Carrier Detect lost.").
+Dec 30, 2004	trout.r@comcast.net		Commented script.
+2006-05-19	rtrout@dinkumsoftware.com	Add states to send a Ctrl-F after sending
+										a .ma file to the glider.
+2010-01-24 fnj@webbresearch.com			Added support for Science Data Logging (Release 7.0).
+-->
+
+<!--
+Used during a mission to transfer sbd and tbd files to the dockserver, transfer an .ma
+file to the glider, and then re-read the ma file and resume the mission.
+
+To change the .ma file sent to the glider, search for two occurances of 'gotoTest.ma' and
+replace with desired filename.  Note this script expects this .ma file to be in the glider's
+'to-glider' folder on the dockserver machine.
+
+For use with dockserver version 1.5 and up.
+
+Note: This script has transitions based on loss of Carrier Detect.  It may not behave correctly with
+communications that do NOT support Carrier Detect.
+-->
+
+<gliderScript>
+	<!-- The start state of the script.  It waits for a surface dialog and then sends the "s" command.
+	-->
+	<initialState name="pickUpCall1">
+		<transitions>
+			<transition matchExpression="Hit Control-R to RESUME" toState="pickUpCall2">
+				<action type="glider" command="Ctrl-C">
+				</action>
+			</transition>
+		</transitions>
+	</initialState>
+	<state name="pickUpCall2">
+		<transitions>
+			<transition matchExpression="Mission end" toState="pickUpCall3">
+			</transition>
+		</transitions>
+	</state>
+	<state name="pickUpCall3">
+		<transitions>
+			<transition matchExpression="terminate the sequence" toState="pickUpCall3">
+				<action type="glider" command="Ctrl-C">
+				</action>
+			</transition>
+			<transition matchExpression="GliderDos" toState="pickUpCall4">
+				<action type="glider" command="put u_max_time_in_gliderdos 86400">
+				</action>
+			</transition>
+		</transitions>
+	</state>
+	<state name="pickUpCall4">
+		<transitions>
+			<transition matchExpression="GliderDos" toState="pickUpCall4">
+				<action type="glider" command="callback 2">
+				</action>
+			</transition>
+		</transitions>
+	</state>
+
+	<finalState name="final"
+			completionCode="0"
+			completionMessage="All OK">
+	</finalState>
+</gliderScript>
+

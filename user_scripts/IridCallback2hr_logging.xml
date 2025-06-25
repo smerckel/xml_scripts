@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+	Date			Author					Comments
+	Feb-22-2006 	cjones@webbresearch.com	Created.
+	-->
+	
+<!--
+	Used during Gliderdos on the surface in drift mode.  For use with dockserver version 1.2 and up.	
+	calls back every 2 hours. Note that u_iridium_max_time_til_callback should be set accordingly
+	 -->
+
+<gliderScript>
+	<initialState name="Wait for Iridium Callback">
+		<transitions>
+			<transition matchExpression="GPS Location" toState="Wait for Iridium Callback">
+				<action type="glider" command="logging off">
+				</action>
+			</transition>
+			<transition matchExpression="GPS Location" toState="Wait for Iridium Callback">
+			  <action type="glider" command="callback 110">
+			  </action>
+			</transition>
+		</transitions>
+	</initialState>
+
+	<state name="sendzModem">
+		<transitions>
+			<!--	If a surface dialog is seen, send "s" command and transition to
+					verify that command received.
+					-->
+			<transition matchExpression="TODOTODO" toState="verifyzModem">
+				<action type="glider" command="send -num=3 *.sbd *.tbd">
+				</action>
+			</transition>
+		</transitions>
+	</state>
+	<!--	This state verifies that the "s" command was received.  Once verified, it transitions
+			to wait for the file transfer to complete.
+			-->
+	<state name="verifyzModem">
+		<transitions>
+			<!--	If a surface dialog is seen, continue to watch for echo of command in order
+					to verify it was received.
+					-->
+			<transition matchExpression="xxx command verify fail xxx" toState="sendzModem">
+			</transition>
+			<!--	If the "s" command's echo is seen from the glider, then the command is verified.
+					Transition to wait for the zmodem file transfer to complete.
+					-->
+			<transition matchExpression="send -num=3 \*.sbd \*.tbd" toState="waitForTransfer">
+			</transition>
+			<transition timeout="10" toState="Wait for Iridium Callback">
+			</transition>
+		</transitions>
+	</state>
+	<!--	Wait for the file transfer to complete either successfully or not.
+			-->
+	<state name="waitForTransfer">
+		<transitions>
+			<!--	If a surface dialog is seen, then the glider has not started a file transfer
+					even though it echoed the "s" command.  Resend the "s" command and transition to
+					verify it.
+					-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyzModem">
+				<action type="glider" command="s -num=3 *.sbd *.tbd">
+				</action>
+			</transition>
+			<!--	If the transfer is successful, then transition to send the mission resume command.
+					-->
+			<transition matchExpression="SUCCESS" toState="sendResume">
+			</transition>
+			<!--	If their were no files to transfer, then transition to resume the mission.
+					-->
+			<transition matchExpression="NO TRANSMISSION" toState="sendResume">
+			</transition>
+			<!--	If an error occured while transfering the files, give up and resume the mission
+					-->
+			<transition matchExpression="Error sending files" toState="sendResume">
+			</transition>
+			<transition timeout="10" toState="Wait for Iridium Callback">
+			</transition>
+		</transitions>
+	</state>
+
+	<state name="sendResume">
+	  <transition matchExpression="TODO" toState="sendCallback">
+	    <action type="glider" command="logging on">
+	    </action>
+	  </transition>
+	  <transition timeout="10" toState="Wait for Iridium Callback">
+	  </transition>
+	</state>
+	<state name="sendCallback">
+	  <transition matchExpression="Logging during GliderDos" toState="Wait for Iridium Callback">
+	    <action type="glider" command="callback 120">
+	    </action>
+	  </transition>
+	  <transition timeout="10" toState="Wait for Iridium Callback">
+	  </transition>
+	</state>
+	
+	<finalState name="final"
+			completionCode="0"
+			completionMessage="All OK">
+	</finalState>
+</gliderScript>

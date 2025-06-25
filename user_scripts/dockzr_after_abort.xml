@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+emergnecy script to upload a ma file after contact.
+
+	 -->
+
+<gliderScript>
+	<!--	Start state.  When a glider surface dialog is seen, send the "s" command and
+			transition to verify that the command was received.
+			-->
+	<initialState name="sendzModem">
+		<transitions>
+			<!--	If a surface dialog is seen, send "s" command and transition to
+					verify that command received.
+					-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="final">
+				<action type="glider" command="!dockzr *.ma">
+				</action>
+			</transition>
+			<transition matchExpression="GliderDos A" toState="final">
+				<action type="glider" command="dockzr *.ma">
+				</action>
+			</transition>
+			<transition matchExpression="no login" toState="sendzModem">
+				<action type="glider" command="#">
+				</action>
+			</transition>
+		</transitions>
+	</initialState>
+	<state>
+		<transitions>
+			<transition matchExpression="Done!" toState="final">
+				<action type="glider" command="sequence helgo.mi(10)">
+				</action>
+			</transition>
+		</transitions>
+	</state>
+	<finalState name="final"
+			completionCode="0"
+			completionMessage="All OK">
+	</finalState>
+</gliderScript>

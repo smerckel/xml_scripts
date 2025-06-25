@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+	Date			Author					Comments
+	Nov 30, 2004	trout.r@comcast.net		Created.
+	Dec 18, 2004	trout.r@comcast.net		Add responding to commands that do not
+											verify.
+	Dec 21, 2004	trout.r@comcast.net		Fixed Iridium "double" surface dialog
+											burst where two s *.sbd are sent
+											in response to two "...RESUME" triggers.
+	-->
+	
+<!--
+	Used during a mission to transfer sbd files to the dockserver and then resume
+	the mission.  For use with dockserver version 1.2 and up.	
+	
+	Added state (initial) to set a variable. It is assumed that the setting of the variable is not 
+	critical. There are no precautions to resubmit the put statement when not successful. 
+	
+	 -->
+
+<!--    Frequently changed variables:
+            u_min_altimeter  8
+            u_dbd_sensor_list_xmit_control 3
+        -->
+
+<gliderScript>
+	<!--	Start state.  When a glider surface dialog is seen, send the "s" command and
+			transition to verify that the command was received.
+			-->
+	<initialState name="sendzModem">
+		<transitions>
+			<!--	If a surface dialog is seen, send "s" command and transition to
+					verify that command received.
+					-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyPut">
+			<action type="glider" command="!put u_alt_reduced_usage_mode 0">
+				</action>
+			</transition>
+		</transitions>
+	</initialState>
+	
+	<state name="verifyPut">
+		<transitions>
+			<transition matchExpression="succeeded:put" toState="verifyzModem">
+			    	<action type="glider" command="s -num=3 *.sbd *.tbd">
+				</action>
+			</transition>
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyzModem">
+				<action type="glider" command="s -num=3 *.sbd *.tbd">
+				</action>
+			</transition>
+		</transitions>
+	</state>
+	
+	<!--	This state verifies that the "s" command was received.  Once verified, it transitions
+			to wait for the file transfer to complete.
+			-->
+	<state name="verifyzModem">
+		<transitions>
+			<!--	If a surface dialog is seen, continue to watch for echo of command in order
+					to verify it was received.
+					-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyzModem">
+			</transition>
+			<!--	If the "s" command verify timer on the dock server times out, then transition
+					to resend the command.
+					-->
+			<transition matchExpression="xxx command verify fail xxx" toState="sendzModem">
+			</transition>
+			<!--	If the "s" command's echo is seen from the glider, then the command is verified.
+					Transition to wait for the zmodem file transfer to complete.
+					-->
+			<transition matchExpression="s -num=3 \*.sbd \*.tbd" toState="waitForTransfer">
+			</transition>
+		</transitions>
+	</state>
+	<!--	Wait for the file transfer to complete either successfully or not.
+			-->
+	<state name="waitForTransfer">
+		<transitions>
+			<!--	If a surface dialog is seen, then the glider has not started a file transfer
+					even though it echoed the "s" command.  Resend the "s" command and transition to
+					verify it.
+					-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyzModem">
+				<action type="glider" command="s -num=3 *.sbd *.tbd">
+				</action>
+			</transition>
+			<!--	If the transfer is successful, then transition to send the mission resume command.
+					-->
+			<transition matchExpression="SUCCESS" toState="sendResume">
+			</transition>
+			<!--	If their were no files to transfer, then transition to resume the mission.
+					-->
+			<transition matchExpression="NO TRANSMISSION" toState="sendResume">
+			</transition>
+			<!--	If an error occured while transfering the files, give up and resume the mission
+					-->
+			<transition matchExpression="Error sending files" toState="sendResume">
+			</transition>
+		</transitions>
+	</state>
+	<!--	Wait for a surface dialog to appear, then resume the glider mission.
+			-->
+	<state name="sendResume">
+		<transitions>
+			<!--	If a surface dialog is seen, send a ^R to resume the mission and transition
+					to verify it was received.
+					-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="waitForResume">
+				<action type="glider" command="Ctrl-R">
+				</action>
+			</transition>
+			<!--	If no surface dialog is seen for 10 minutes, then assume the glider has dove.
+					Transition to send the "s" command upon the next surface event.
+					-->
+			<transition timeout="10" toState="sendzModem">
+			</transition>
+		</transitions>
+	</state>
+	<!--	This state verifies that the mission has resumed.  This verification keeps the script from
+			prematurely sending an "s" command before the glider actually dives (sometimes a surface dialog
+			is seen after the ^R is sent.  Ideally this script should be changed to watch for the glider
+			disconnect message.  This approach is more robust.
+			-->
+	<state name="waitForResume">
+		<transitions>
+			<!--	If the ^R command is not echoed within the timeout period, transition to resend
+					the command.
+					-->
+			<transition matchExpression="xxx command verify fail xxx" toState="sendResume">
+			</transition>
+			<!--	If the ^R command is verified, then transition to send the "s" command
+					upon the next glider surfacing.
+					-->
+			<transition matchExpression="RESUMING MISSION" toState="sendzModem">
+			</transition>
+			<!--	If the command cannot be verified one way or the other within 10 minutes, then
+					assume the glider has dove and transition to send the "s" command upon the next
+					surfacing.
+					-->
+			<transition timeout="10" toState="sendzModem">
+			</transition>
+		</transitions>
+	</state>
+	<finalState name="final"
+			completionCode="0"
+			completionMessage="All OK">
+	</finalState>
+</gliderScript>

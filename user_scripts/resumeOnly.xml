@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+	-->
+	
+<!--
+     immediately resumes mission.
+	 -->
+
+<gliderScript>
+	<!--	Start state.  When a glider surface dialog is seen, send the "s" command and
+			transition to verify that the command was received.
+			-->
+	<initialState name="sendResume">
+		<transitions>
+			<!--	If a surface dialog is seen, send a ^R to resume the mission and transition
+					to verify it was received.
+					-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="waitForResume">
+				<action type="glider" command="Ctrl-R">
+				</action>
+			</transition>
+			<!--	If no surface dialog is seen for 10 minutes, then assume the glider has dove.
+					Transition to send the "s" command upon the next surface event.
+					-->
+			<transition timeout="10" toState="sendResume">
+			</transition>
+		</transitions>
+	</initialState>
+	<!--	This state verifies that the mission has resumed.  This verification keeps the script from
+			prematurely sending an "s" command before the glider actually dives (sometimes a surface dialog
+			is seen after the ^R is sent.  Ideally this script should be changed to watch for the glider
+			disconnect message.  This approach is more robust.
+			-->
+	<state name="waitForResume">
+		<transitions>
+			<!--	If the ^R command is not echoed within the timeout period, transition to resend
+					the command.
+					-->
+			<transition matchExpression="xxx command verify fail xxx" toState="sendResume">
+			</transition>
+			<!--	If the ^R command is verified, then transition to send the "s" command
+					upon the next glider surfacing.
+					-->
+			<transition matchExpression="RESUMING MISSION" toState="sendResume">
+			</transition>
+			<!--	If the command cannot be verified one way or the other within 10 minutes, then
+					assume the glider has dove and transition to send the "s" command upon the next
+					surfacing.
+					-->
+			<transition timeout="10" toState="sendResume">
+			</transition>
+		</transitions>
+	</state>
+	<finalState name="final"
+			completionCode="0"
+			completionMessage="All OK">
+	</finalState>
+</gliderScript>

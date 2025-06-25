@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+Upon seeing the dialog this scripts puts a variable. Then exits, so
+another script takes over.
+-->
+
+<!--    Frequently changed variables:
+            u_min_altimeter  8
+            u_dbd_sensor_list_xmit_control 3
+        -->
+
+<gliderScript>
+	<!--	Start state.  When a glider surface dialog is seen, send the "s" command and
+			transition to verify that the command was received.
+			-->
+	<initialState name="Initial">
+		<transitions>
+			<!--	If a surface dialog is seen, send put command and transition to
+					verify that command received.
+					-->
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyPut">
+			<action type="glider" command="!put u_max_time_in_gliderdos 7200">
+				</action>
+			</transition>
+		</transitions>
+	</initialState>
+	
+	<state name="verifyPut">
+		<transitions>
+			<transition matchExpression="succeeded:put" toState="Exit">
+			</transition>
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyPut">
+			<action type="glider" command="!put u_max_time_in_gliderdos 7200">
+				</action>
+			</transition>
+		</transitions>
+	</state>
+	
+	<finalState name="Exit"
+			completionCode="0"
+			completionMessage="All OK">
+	</finalState>
+</gliderScript>

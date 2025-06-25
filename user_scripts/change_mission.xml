@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gliderScript>
+  
+  <initialState name="sendCC">
+    <transitions>
+
+      <transition matchExpression="Hit Control-R to RESUME" toState="sendCCagain">
+	<action type="glider" command="Ctrl-C">
+	</action>
+      </transition>
+      
+    </transitions>
+  </initialState>
+
+  <state name="sendCCagain">	
+    <transitions>
+      <transition matchExpression="control-P" toState="verifyCtrlC">
+	<action type="glider" command="Ctrl-C">
+	</action>
+      </transition>
+        
+      <transition timeout="5" toState="sendCC">
+      </transition>
+    </transitions>
+  </state>
+  
+  
+  
+  <state name="verifyCtrlC">	
+    <transitions>
+      <transition matchExpression="terminating the sequence" toState="sequenceMission">
+	<action type="glider" command="sequence micro.mi(10)">
+	</action>
+      </transition>
+      
+      <transition timeout="5" toState="sendCC">
+      </transition>
+    </transitions>
+  </state>
+  
+  <state name="sequenceMission">	
+    <transitions>
+      <transition matchExpression="SEQUENCE: About to run" toState="final">
+	<action type="glider" command="Ctrl-P">
+	</action>
+      </transition>
+      <transition timeout="5" toState="final">
+      </transition>
+    </transitions>
+  </state>
+  
+  
+  <finalState name="final"
+	      completionCode="0"
+	      completionMessage="All OK">
+  </finalState>
+</gliderScript>
+
+

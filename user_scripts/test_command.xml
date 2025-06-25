@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+	Date			Author					Comments
+
+-->
+
+<gliderScript>
+  <initialState name="sendCommand">
+    <transitions>
+      <!--	If a surface dialog is seen, send command and transition to
+	  sendzModem to continue with sending sbd files	
+      -->
+      <transition matchExpression="Hit Control-R to RESUME" toState="final">
+	<action type="glider" command="!zs \mafiles\goto_l50.ma">
+	</action>
+      </transition>
+    </transitions>
+  </initialState>
+  <finalState name="final"
+	      completionCode="0"
+	      completionMessage="All OK">
+  </finalState>
+</gliderScript>

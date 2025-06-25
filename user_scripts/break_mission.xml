@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gliderScript>
+
+
+<initialState name="detectConnection">
+		<transitions>
+			<transition matchExpression="Iridium console active and ready" toState="detectState">
+				<action type="glider" command="">
+				</action>
+			</transition>
+		</transitions>
+</initialState>
+
+
+<state name="detectState">
+		<transitions>
+
+			<transition matchExpression="Hit Control-R to RESUME" toState="verifyCtrlC">
+				<action type="glider" command="Ctrl-C">
+				</action>
+			</transition>
+
+			<transition matchExpression="SEQUENCE: About to run" toState="verifyCtrlC">
+				<action type="glider" command="Ctrl-C">
+				</action>
+			</transition>
+
+			<transition matchExpression="GliderDos.*\>" toState="final">
+			</transition>
+
+                        <transition timeout="5" toState="detectConnection">
+			</transition>
+
+		</transitions>
+</state>
+
+
+
+
+<state name="verifyCtrlC">	
+		<transitions>
+
+			<transition matchExpression="GliderDos.*\>" toState="final">
+			</transition>
+
+			<transition matchExpression="SEQUENCE: About to run" toState="verifyCtrlC">
+				<action type="glider" command="Ctrl-C">
+				</action>
+			</transition>
+
+                        <transition timeout="5" toState="detectConnection">
+			</transition>
+		</transitions>
+</state>
+
+
+	<finalState name="final"
+			completionCode="0"
+			completionMessage="All OK">
+	</finalState>
+</gliderScript>
+
+
