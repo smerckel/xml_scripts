@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gliderScript>
+  
+  <initialState name="detectMenu">
+    <transitions>
+      <transition matchExpression="Hit Control-R to RESUME" toState="verifyCdCommand">
+	<action type="glider" command="!cd \">
+	</action>
+      </transition>
+    </transitions>
+  </initialState>
+
+
+  <state name="verifyCdCommand">
+    <transitions>
+      
+      <transition matchExpression="succeeded:cd" toState="verifyCdStateCacheCommand">
+	<action type="glider" command="!cd \state\cache">
+	</action>
+      </transition>
+      
+      <transition timeout="1" toState="final">
+      </transition>
+
+    </transitions>
+  </state>
+
+  <state name="verifyCdStateCacheCommand">
+    <transitions>
+      
+      <transition matchExpression="succeeded:cd"
+		  toState="verifyZsCommand">
+	<action type="glider" command="!zs 00a8b54e.ccc">
+	</action>
+      </transition>
+      
+      <transition timeout="3" toState="final">
+      </transition>
+
+    </transitions>
+  </state>
+  
+
+  <state name="verifyZsCommand">	
+    <transitions>
+      
+      <transition matchExpression="succeeded:zs" toState="final">
+      </transition>
+      
+    </transitions>
+  </state>
+
+  
+  <finalState name="final"
+	      completionCode="0"
+	      completionMessage="All OK">
+  </finalState>
+</gliderScript>
+
+
