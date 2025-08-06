@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gliderScript>
+  
+  <initialState name="detectMenu">
+    <transitions>
+      <transition matchExpression="Hit Control-R to RESUME" toState="detectSciDos">
+	<action type="glider" command="Ctrl-T">
+	</action>
+      </transition>
+    </transitions>
+  </initialState>
+
+
+  <state name="detectSciDos">
+    <transitions>
+      
+      <transition matchExpression="SciDos>" toState="verifyZrCommand">
+	<action type="glider" command="dockzr bsd.cfg">
+	</action>
+      </transition>
+      
+      <transition timeout="1" toState="verifyQuit">
+	<action type="glider" command="quit">
+	</action>
+      </transition>
+
+    </transitions>
+  </state>
+
+
+  <state name="verifyZrCommand">	
+    <transitions>
+      <transition matchExpression="not found" toState="verifyQuit">
+      	<action type="glider" command="quit">
+	</action>
+      </transition>
+
+      <transition matchExpression="Done!" toState="verifyQuit">
+      	<action type="glider" command="quit">
+	</action>
+      </transition>
+      <transition timeout="1" toState="verifyQuit">
+      	<action type="glider" command="quit">
+	</action>
+      </transition>
+    </transitions>
+  </state>
+
+  <state name="verifyQuit">	
+    <transitions>
+      <transition matchExpression="QUIT" toState="final">
+      </transition>
+      <transition timeout="1" toState="verifyQuit">
+      	<action type="glider" command="quit">
+	</action>
+      </transition>
+    </transitions>
+  </state>
+
+
+  <finalState name="final"
+	      completionCode="0"
+	      completionMessage="All OK">
+  </finalState>
+</gliderScript>
+
+
